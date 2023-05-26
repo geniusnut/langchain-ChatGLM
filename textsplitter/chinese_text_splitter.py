@@ -30,9 +30,12 @@ class ChineseTextSplitter(CharacterTextSplitter):
             text = re.sub('\s', " ", text)
             text = re.sub("\n\n", "", text)
 
-        text = re.sub(r'([;；.!?。！？\?])([^”’])', r"\1\n\2", text)  # 单字符断句符
+        # avoid split [.?] in website and digital numbers like // ["99.9", "https://www.google.com/search?q="]
+        text = re.sub(r'((?<=[^a-zA-Z0-9_])[;；.!?。！？]|[;；.!?。！？](?=[^a-zA-Z0-9_]))([^”’])', r"\1\n\2", text)  # 单字符断句符
         text = re.sub(r'(\.{6})([^"’”」』])', r"\1\n\2", text)  # 英文省略号
         text = re.sub(r'(\…{2})([^"’”」』])', r"\1\n\2", text)  # 中文省略号
+        text = re.sub(r'((?<![a-zA-Z0-9_])[;；!！?？。]["’”」』]{0,2}|[;；!！?？。](?![a-zA-Z0-9_])["’”」』]{0,2})'
+                      r'([^;；!！?？。])', r'\1\n\2', text)
         text = re.sub(r'([;；!?。！？\?]["’”」』]{0,2})([^;；!?，。！？\?])', r'\1\n\2', text)
         # 如果双引号前有终止符，那么双引号才是句子的终点，把分句符\n放到双引号后，注意前面的几句都小心保留了双引号
         text = text.rstrip()  # 段尾如果有多余的\n就去掉它
